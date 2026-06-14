@@ -84,8 +84,15 @@ const envSchema = z
     RAG_TOP_K: z.coerce.number().int().positive().default(3),
     RAG_MAX_CHUNK_CHARS: z.coerce.number().int().positive().default(1200),
     RAG_MIN_SCORE: z.coerce.number().min(0).max(1).default(0.55),
-    RAG_EMBEDDING_MODEL: z.string().default('gemini-embedding-001'),
-    RAG_EMBEDDING_DIMENSIONS: z.coerce.number().int().positive().default(768),
+    RAG_EMBEDDING_URL: z
+      .string()
+      .url('RAG_EMBEDDING_URL must be a valid URL')
+      .default('http://localhost:4445/v1/embeddings'),
+    RAG_EMBEDDING_API_KEY: z.preprocess(
+      (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+      z.string().min(1).optional(),
+    ),
+    RAG_EMBEDDING_MODEL: z.string().default('BAAI/bge-small-en-v1.5'),
     RAG_EMBEDDING_BATCH_SIZE: z.coerce.number().int().positive().default(32),
     RAG_SYNC_ON_STARTUP: z
       .preprocess((value) => {
@@ -181,10 +188,9 @@ export const config = {
   ragTopK: raw.RAG_TOP_K,
   ragMaxChunkChars: raw.RAG_MAX_CHUNK_CHARS,
   ragMinScore: raw.RAG_MIN_SCORE,
+  ragEmbeddingUrl: raw.RAG_EMBEDDING_URL,
+  ragEmbeddingApiKey: raw.RAG_EMBEDDING_API_KEY,
   ragEmbeddingModel: raw.RAG_EMBEDDING_MODEL,
-  ragEmbeddingDimensions: raw.RAG_EMBEDDING_DIMENSIONS,
   ragEmbeddingBatchSize: raw.RAG_EMBEDDING_BATCH_SIZE,
   ragSyncOnStartup: raw.RAG_SYNC_ON_STARTUP,
-  ragEmbeddingUrl: `https://generativelanguage.googleapis.com/v1beta/models/${raw.RAG_EMBEDDING_MODEL}:embedContent`,
-  ragEmbeddingBatchUrl: `https://generativelanguage.googleapis.com/v1beta/models/${raw.RAG_EMBEDDING_MODEL}:batchEmbedContents`,
 };

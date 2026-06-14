@@ -47,7 +47,7 @@ server/
     rag.js              # Chunking + semantic retrieval orchestration
     ragIndexer.js       # Load docs, embed chunks, sync to pgvector
     ragStore.js         # PostgreSQL pgvector search/upsert
-    embeddings.js       # Gemini embedding API client
+    embeddings.js       # External embedding API client (heptagon-embeddings)
     clientRoutingStore.js
     usageStore.js
     inferenceLogStore.js
@@ -92,7 +92,7 @@ widget / API client
 | Widget UI | `client/widget.js`, `widget.css` |
 | Knowledge base content | `docs/*.md` + `npm run ingest-docs` |
 | RAG indexing / vectors | `server/services/ragIndexer.js`, `scripts/ingest-docs.js` |
-| Embedding API | `server/services/embeddings.js` |
+| Embedding API client | `server/services/embeddings.js` — service lives in separate `heptagon-embeddings` repo |
 | pgvector storage | `server/services/ragStore.js`, `scripts/create-rag-chunks-table.sql` |
 
 ## Configuration
@@ -105,14 +105,14 @@ widget / API client
 Key feature flags:
 
 - `RAG_ENABLED`, `RAG_DOCS_PATH`, `RAG_TOP_K`, `RAG_MIN_SCORE` — knowledge base
-- `RAG_EMBEDDING_MODEL`, `RAG_EMBEDDING_DIMENSIONS`, `RAG_SYNC_ON_STARTUP` — vector index
+- `RAG_EMBEDDING_URL`, `RAG_EMBEDDING_MODEL`, `RAG_SYNC_ON_STARTUP` — vector index via external `heptagon-embeddings` service (see `embedding-plan.md`)
 - `DATABASE_URL` — required for RAG semantic search (pgvector table `rag_chunks`)
 - `SUMMARIZE_ENABLED`, `SUMMARIZE_EVERY_N_TURNS` — history compression
 - `FAST_REQUEST_LIMIT` — Cerebras requests before Gemini switch
 
 ## RAG (semantic / pgvector)
 
-1. **Ingest** — `npm run ingest-docs` (or `RAG_SYNC_ON_STARTUP=true`) chunks `docs/*.md` by `##` headings, embeds with Gemini `gemini-embedding-001` (768 dims), stores in PostgreSQL `rag_chunks` with pgvector HNSW index.
+1. **Ingest** — `npm run ingest-docs` (or `RAG_SYNC_ON_STARTUP=true`) chunks `docs/*.md` by `##` headings, embeds via external `heptagon-embeddings` service, stores in PostgreSQL `rag_chunks` with pgvector HNSW index.
 2. **Retrieve** — on each chat request, embed the user message, cosine-search pgvector, filter by `RAG_MIN_SCORE`, take top `RAG_TOP_K`.
 3. **Augment** — `buildRagSystemInstruction` appends matched chunks to the system prompt.
 
@@ -146,7 +146,7 @@ docker compose up --build
 - `tests/chat.test.js` — integration tests for `/chatbot`
 - `tests/summarizer.test.js` — history compression unit tests
 - `tests/rag.test.js` — RAG chunking + mocked vector retrieval (`tests/fixtures/rag-docs/`)
-- `tests/embeddings.test.js` — Gemini embedding API client
+- `tests/embeddings.test.js` — external embedding API client
 - `tests/rateLimit.test.js` — rate limit behavior
 
 When adding features: unit-test pure logic; integration-test HTTP paths that touch inference.

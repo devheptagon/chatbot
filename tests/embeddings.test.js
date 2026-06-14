@@ -6,12 +6,12 @@ describe('embeddings', () => {
     vi.restoreAllMocks();
   });
 
-  it('embeds a single text via Gemini embedContent', async () => {
+  it('embeds a single text via external embedding API', async () => {
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       status: 200,
       json: async () => ({
-        embedding: { values: [0.1, 0.2, 0.3] },
+        data: [{ embedding: [0.1, 0.2, 0.3], index: 0 }],
       }),
     });
 
@@ -19,16 +19,19 @@ describe('embeddings', () => {
 
     expect(vector).toEqual([0.1, 0.2, 0.3]);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0][0]).toContain('embedContent');
+    expect(fetchSpy.mock.calls[0][0]).toContain('/v1/embeddings');
     expect(fetchSpy.mock.calls[0][1].body).toContain('business hours');
   });
 
-  it('embeds multiple texts via Gemini batchEmbedContents', async () => {
+  it('embeds multiple texts in one batch request', async () => {
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       status: 200,
       json: async () => ({
-        embeddings: [{ values: [0.1] }, { values: [0.2] }],
+        data: [
+          { embedding: [0.1], index: 0 },
+          { embedding: [0.2], index: 1 },
+        ],
       }),
     });
 
@@ -36,6 +39,7 @@ describe('embeddings', () => {
 
     expect(vectors).toEqual([[0.1], [0.2]]);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0][0]).toContain('batchEmbedContents');
+    expect(fetchSpy.mock.calls[0][0]).toContain('/v1/embeddings');
+    expect(JSON.parse(fetchSpy.mock.calls[0][1].body).input).toEqual(['first', 'second']);
   });
 });

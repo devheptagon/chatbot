@@ -1,35 +1,46 @@
 import { config } from '../config.js';
 
-function extractEmbeddingValues(data) {
-  const values = data?.embedding?.values;
+function extractEmbedding(data) {
+  const values = data?.data?.[0]?.embedding;
   if (!Array.isArray(values) || values.length === 0) {
-    throw new Error('Gemini embedding API returned an empty vector');
+    throw new Error('Embedding API returned an empty vector');
   }
   return values;
 }
 
 function extractBatchEmbeddings(data, expectedCount) {
-  const embeddings = data?.embeddings;
-  if (!Array.isArray(embeddings) || embeddings.length !== expectedCount) {
-    throw new Error('Gemini batch embedding API returned an unexpected result');
+  const items = data?.data;
+  if (!Array.isArray(items) || items.length !== expectedCount) {
+    throw new Error('Embedding API returned an unexpected batch result');
   }
 
-  return embeddings.map((entry, index) => {
-    const values = entry?.values;
-    if (!Array.isArray(values) || values.length === 0) {
-      throw new Error(`Gemini batch embedding API returned an empty vector at index ${index}`);
-    }
-    return values;
-  });
+  return [...items]
+    .sort((left, right) => (left.index ?? 0) - (right.index ?? 0))
+    .map((entry, index) => {
+      const values = entry?.embedding;
+      if (!Array.isArray(values) || values.length === 0) {
+        throw new Error(`Embedding API returned an empty vector at index ${index}`);
+      }
+      return values;
+    });
 }
 
-async function postEmbedding(url, body) {
-  const response = await fetch(url, {
+function buildHeaders() {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (config.ragEmbeddingApiKey) {
+    headers.Authorization = `Bearer ${config.ragEmbeddingApiKey}`;
+  }
+
+  return headers;
+}
+
+async function postEmbedding(body) {
+  const response = await fetch(config.ragEmbeddingUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': config.inferenceToken,
-    },
+    headers: buildHeaders(),
     body: JSON.stringify(body),
   });
 
@@ -37,13 +48,14 @@ async function postEmbedding(url, body) {
   try {
     data = await response.json();
   } catch {
-    throw Object.assign(new Error('Invalid response from Gemini embedding API'), {
+    throw Object.assign(new Error('Invalid response from embedding API'), {
       statusCode: 502,
     });
   }
 
   if (!response.ok) {
-    const upstreamMessage = data?.error?.message ?? 'Gemini embedding API request failed';
+    const upstreamMessage =
+      data?.error?.message ?? data?.message ?? 'Embedding API request failed';
     throw Object.assign(new Error(upstreamMessage), {
       statusCode: 502,
       upstreamStatus: response.status,
@@ -54,15 +66,12 @@ async function postEmbedding(url, body) {
 }
 
 export async function embedText(text) {
-  const data = await postEmbedding(config.ragEmbeddingUrl, {
-    model: `models/${config.ragEmbeddingModel}`,
-    content: {
-      parts: [{ text }],
-    },
-    outputDimensionality: config.ragEmbeddingDimensions,
+  const data = await postEmbedding({
+    model: config.ragEmbeddingModel,
+    input: text,
   });
 
-  return extractEmbeddingValues(data);
+  return extractEmbedding(data);
 }
 
 export async function embedTexts(texts) {
@@ -75,14 +84,9 @@ export async function embedTexts(texts) {
 
   for (let index = 0; index < texts.length; index += batchSize) {
     const batch = texts.slice(index, index + batchSize);
-    const data = await postEmbedding(config.ragEmbeddingBatchUrl, {
-      requests: batch.map((text) => ({
-        model: `models/${config.ragEmbeddingModel}`,
-        content: {
-          parts: [{ text }],
-        },
-        outputDimensionality: config.ragEmbeddingDimensions,
-      })),
+    const data = await postEmbedding({
+      model: config.ragEmbeddingModel,
+      input: batch,
     });
 
     allEmbeddings.push(...extractBatchEmbeddings(data, batch.length));

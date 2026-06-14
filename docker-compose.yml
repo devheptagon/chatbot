@@ -10,6 +10,7 @@ services:
       - NODE_ENV=production
       - USAGE_STORE_PATH=/app/data/usage.json
       - CLIENT_ROUTING_STORE_PATH=/app/data/client-routing.json
+      # RAG_EMBEDDING_URL and other RAG vars come from .env (external heptagon-embeddings service)
       # DATABASE_URL is loaded from .env via env_file (use global-postgres-db:5432 on proxy-network)
     volumes:
       - ./data:/app/data

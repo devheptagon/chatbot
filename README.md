@@ -133,7 +133,7 @@ Inference logs still store the original request history from the client.
 
 ## RAG (semantic knowledge base)
 
-Place markdown files in `docs/`. The server uses **Gemini embeddings + PostgreSQL pgvector** for semantic search.
+Place markdown files in `docs/`. The server uses an **external embedding service + PostgreSQL pgvector** for semantic search (see `embedding-plan.md`).
 
 ### Setup
 
@@ -169,8 +169,9 @@ Re-run `npm run ingest-docs` after adding or changing docs. Optionally set `RAG_
 | `RAG_TOP_K` | Max sections injected per request | `3` |
 | `RAG_MAX_CHUNK_CHARS` | Max characters per section chunk | `1200` |
 | `RAG_MIN_SCORE` | Minimum cosine similarity (0–1) to include a chunk | `0.55` |
-| `RAG_EMBEDDING_MODEL` | Gemini embedding model | `gemini-embedding-001` |
-| `RAG_EMBEDDING_DIMENSIONS` | Vector size stored in pgvector | `768` |
+| `RAG_EMBEDDING_URL` | External embedding service endpoint | `http://localhost:4445/v1/embeddings` |
+| `RAG_EMBEDDING_MODEL` | Model name sent to embedding service | `BAAI/bge-small-en-v1.5` |
+| `RAG_EMBEDDING_API_KEY` | Optional bearer token for embedding service | *(empty)* |
 | `RAG_SYNC_ON_STARTUP` | Re-index docs when the API boots | `false` |
 
 If no chunks match the question, the assistant falls back to its normal behavior and should say when information is not in the knowledge base.

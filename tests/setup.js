@@ -23,6 +23,10 @@ process.env.CLIENT_ROUTING_STORE_PATH =
   process.env.CLIENT_ROUTING_STORE_PATH || './data/test-client-routing.json';
 process.env.DATABASE_URL = '';
 process.env.RAG_DOCS_PATH = process.env.RAG_DOCS_PATH || './tests/fixtures/rag-docs';
+process.env.RAG_EMBEDDING_URL =
+  process.env.RAG_EMBEDDING_URL || 'http://localhost:4445/v1/embeddings';
+process.env.RAG_EMBEDDING_MODEL =
+  process.env.RAG_EMBEDDING_MODEL || 'BAAI/bge-small-en-v1.5';
 
 const usagePath = path.resolve(process.env.USAGE_STORE_PATH);
 const routingPath = path.resolve(process.env.CLIENT_ROUTING_STORE_PATH);
