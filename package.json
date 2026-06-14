@@ -1,0 +1,31 @@
+{
+  "name": "heptagon-chatbot",
+  "version": "1.0.0",
+  "description": "Gemini-backed chatbot proxy API with embeddable HTML client",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ingest-docs": "node scripts/ingest-docs.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "pg": "^8.21.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "supertest": "^7.0.0",
+    "vitest": "^3.0.5"
+  }
+}
