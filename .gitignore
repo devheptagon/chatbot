@@ -10,4 +10,4 @@ secrets/
 .cursor/
 *.log
 .DS_Store
-docs
+docs/
