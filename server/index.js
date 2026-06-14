@@ -19,7 +19,28 @@ export function createApp() {
 
   app.set('trust proxy', 1);
 
-  app.use(helmet());
+  const connectSrc = ["'self'"];
+  if (config.apiDomain) {
+    connectSrc.push(`https://${config.apiDomain}`);
+  }
+  if (Array.isArray(config.allowedOrigins)) {
+    for (const origin of config.allowedOrigins) {
+      if (origin.startsWith('http://') || origin.startsWith('https://')) {
+        connectSrc.push(origin);
+      }
+    }
+  }
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+          'connect-src': [...new Set(connectSrc)],
+        },
+      },
+    }),
+  );
   app.use(corsMiddleware);
   app.use(
     express.json({

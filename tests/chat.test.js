@@ -232,4 +232,29 @@ describe('GET /chatbot-config.js', () => {
     expect(response.headers['content-type']).toMatch(/javascript/);
     expect(response.text).toContain('window.CHATBOT_CONFIG');
   });
+
+  it('uses a relative apiUrl when config is served from a proxy host', async () => {
+    const previousApiDomain = process.env.API_DOMAIN;
+    const previousPublicApiUrl = process.env.PUBLIC_API_URL;
+    process.env.API_DOMAIN = 'chatbot.heptagonsoft.com';
+    delete process.env.PUBLIC_API_URL;
+
+    vi.resetModules();
+    const { createApp: createConfiguredApp } = await import('../server/index.js');
+    const app = createConfiguredApp();
+    const response = await request(app)
+      .get('/chatbot/chatbot-config.js')
+      .set('Host', 'heptagonsoft.com')
+      .expect(200);
+
+    expect(response.text).toContain('"apiUrl": "/chatbot"');
+
+    process.env.API_DOMAIN = previousApiDomain;
+    if (previousPublicApiUrl === undefined) {
+      delete process.env.PUBLIC_API_URL;
+    } else {
+      process.env.PUBLIC_API_URL = previousPublicApiUrl;
+    }
+    vi.resetModules();
+  });
 });

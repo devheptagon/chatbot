@@ -8,6 +8,7 @@ RUN npm install --omit=dev
 COPY server ./server
 COPY client ./client
 COPY docs ./docs
+COPY scripts ./scripts
 
 ENV NODE_ENV=production
 ENV USAGE_STORE_PATH=/app/data/usage.json

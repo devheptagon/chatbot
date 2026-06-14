@@ -3,9 +3,22 @@ import { config } from '../config.js';
 
 const router = Router();
 
-function sendChatbotConfig(_req, res) {
+function resolvePublicApiUrl(req) {
+  const configured = config.publicApiUrl;
+  if (configured.startsWith('/')) {
+    return configured;
+  }
+
+  if (config.apiDomain && req.hostname !== config.apiDomain) {
+    return '/chatbot';
+  }
+
+  return configured;
+}
+
+function sendChatbotConfig(req, res) {
   const payload = {
-    apiUrl: config.publicApiUrl,
+    apiUrl: resolvePublicApiUrl(req),
     clientApp: config.widgetClientApp,
     title: config.widgetTitle,
     placeholder: config.widgetPlaceholder,
