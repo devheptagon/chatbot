@@ -1,2 +1,13 @@
 .env
 node_modules
+
+# Runtime JSON stores (created locally / in Docker volume)
+data/*
+!data/.gitkeep
+
+# Secrets and local tooling
+secrets/
+.cursor/
+*.log
+.DS_Store
+docs
