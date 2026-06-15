@@ -11,3 +11,4 @@ secrets/
 *.log
 .DS_Store
 docs/
+.cursorignore
